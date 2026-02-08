@@ -20,10 +20,11 @@ jobs:
         arch: 'win64_mingw'
 
     - name: Configure
+      shell: pwsh
       run: |
-        cmake -B build -S . ^
-        -DCMAKE_PREFIX_PATH=%Qt6_DIR% ^
-        -G "MinGW Makefiles"
+        cmake -B build -S . `
+          -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+          -G "MinGW Makefiles"
 
     - name: Build
       run: cmake --build build
