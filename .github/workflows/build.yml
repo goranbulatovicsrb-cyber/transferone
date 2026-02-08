@@ -1,4 +1,4 @@
-name: Build TransferOne
+name: Build TransferOne Ultimate
 
 on:
   push:
@@ -9,8 +9,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    # 1️⃣ Preuzmi kod
     - uses: actions/checkout@v4
 
+    # 2️⃣ Instaliraj Qt6 (MSVC 2019 64-bit)
     - name: Install Qt (MSVC)
       uses: jurplel/install-qt-action@v4
       with:
@@ -19,6 +21,7 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
+    # 3️⃣ Konfiguracija CMake
     - name: Configure
       shell: pwsh
       run: |
@@ -27,11 +30,30 @@ jobs:
           -G "Visual Studio 17 2022" `
           -A x64
 
+    # 4️⃣ Build Release
     - name: Build
       run: cmake --build build --config Release
 
+    # 5️⃣ Deploy Qt DLL-ova sa windeployqt
+    - name: Deploy Qt DLLs
+      shell: pwsh
+      run: |
+        $deploy = "deploy"
+        New-Item -ItemType Directory -Force -Path $deploy
+        Copy-Item build/Release/TransferOne.exe $deploy
+
+        # Pokreni windeployqt da ubaci sve DLL-ove i plugin-ove
+        & "$env:Qt6_DIR\bin\windeployqt.exe" "$deploy\TransferOne.exe" --release
+
+    # 6️⃣ Napravi ZIP sa exe + DLL-ovima
+    - name: Package ZIP
+      shell: pwsh
+      run: |
+        Compress-Archive -Path deploy\* -DestinationPath TransferOne_Full.zip
+
+    # 7️⃣ Uploaduj ZIP kao artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: TransferOne
-        path: build/Release/TransferOne.exe
+        name: TransferOne_Full
+        path: TransferOne_Full.zip
