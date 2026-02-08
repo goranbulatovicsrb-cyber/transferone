@@ -11,29 +11,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Qt
+    - name: Install Qt (MSVC)
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.6.0'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_mingw'
-
-    - name: Install Ninja
-      run: choco install ninja
+        arch: 'win64_msvc2019_64'
 
     - name: Configure
       shell: pwsh
       run: |
         cmake -B build -S . `
           -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
-          -G Ninja
+          -G "Visual Studio 17 2022" `
+          -A x64
 
     - name: Build
-      run: cmake --build build
+      run: cmake --build build --config Release
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: TransferOne
-        path: build/TransferOne.exe
+        path: build/Release/TransferOne.exe
