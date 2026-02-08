@@ -34,7 +34,7 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
-    # 5️⃣ Deploy Qt DLL-ova sa windeployqt
+    # 5️⃣ Deploy Qt DLL-ova sa windeployqt (ISPRAVNO)
     - name: Deploy Qt DLLs
       shell: pwsh
       run: |
@@ -42,8 +42,9 @@ jobs:
         New-Item -ItemType Directory -Force -Path $deploy
         Copy-Item build/Release/TransferOne.exe $deploy
 
-        # Pokreni windeployqt da ubaci sve DLL-ove i plugin-ove
-        & "$env:Qt6_DIR\bin\windeployqt.exe" "$deploy\TransferOne.exe" --release
+        # Pravi punu putanju do windeployqt.exe i pozovi ga
+        $windeployqt = Join-Path $env:Qt6_DIR "bin\windeployqt.exe"
+        & "$windeployqt" "$deploy\TransferOne.exe" --release
 
     # 6️⃣ Napravi ZIP sa exe + DLL-ovima
     - name: Package ZIP
