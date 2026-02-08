@@ -34,14 +34,16 @@ jobs:
     - name: Build
       run: cmake --build build --config Release
 
-    # 5️⃣ Deploy Qt DLL-ova sa windeployqt (finalna verzija)
+    # 5️⃣ Deploy Qt DLL-ova sa windeployqt (stabilno)
     - name: Deploy Qt DLLs
       shell: pwsh
       run: |
-        # Traži TransferOne.exe bilo gde u build folderu
+        Write-Host "Tražim TransferOne.exe u cijelom build folderu..."
         $exeFiles = Get-ChildItem -Path build -Filter TransferOne.exe -Recurse
 
         if ($exeFiles.Count -eq 0) {
+            Write-Host "Svi fajlovi u build folderu:"
+            Get-ChildItem -Path build -Recurse | ForEach-Object { Write-Host $_.FullName }
             Write-Error "TransferOne.exe nije pronađen u build folderu"
             exit 1
         }
