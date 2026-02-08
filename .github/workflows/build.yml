@@ -19,12 +19,15 @@ jobs:
         target: 'desktop'
         arch: 'win64_mingw'
 
+    - name: Install Ninja
+      run: choco install ninja
+
     - name: Configure
       shell: pwsh
       run: |
         cmake -B build -S . `
           -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
-          -G "MinGW Makefiles"
+          -G Ninja
 
     - name: Build
       run: cmake --build build
