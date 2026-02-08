@@ -9,10 +9,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # 1️⃣ Preuzmi kod
     - uses: actions/checkout@v4
 
-    # 2️⃣ Instaliraj Qt6 (MSVC 2019 64-bit)
     - name: Install Qt (MSVC)
       uses: jurplel/install-qt-action@v4
       with:
@@ -21,7 +19,6 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
 
-    # 3️⃣ Konfiguracija CMake
     - name: Configure
       shell: pwsh
       run: |
@@ -30,25 +27,27 @@ jobs:
           -G "Visual Studio 17 2022" `
           -A x64
 
-    # 4️⃣ Build Release
     - name: Build
       run: cmake --build build --config Release
 
-    # 5️⃣ Deploy Qt DLL-ova sa windeployqt (finalna verzija)
     - name: Deploy Qt DLLs
       shell: pwsh
       run: |
-        $buildExe = "build/Release/TransferOne.exe"
-        
-        if (-Not (Test-Path $buildExe)) {
-            Write-Error "TransferOne.exe nije pronađen na $buildExe"
+        # Pronađi exe u build folderu (rekurzivno)
+        $exeFiles = Get-ChildItem -Path build/Release -Filter TransferOne.exe -Recurse
+
+        if ($exeFiles.Count -eq 0) {
+            Write-Error "TransferOne.exe nije pronađen u build/Release folderu"
             exit 1
         }
+
+        $exePath = $exeFiles[0].FullName
+        Write-Host "Pronađen exe: $exePath"
 
         $deploy = "deploy"
         New-Item -ItemType Directory -Force -Path $deploy
 
-        Copy-Item $buildExe $deploy
+        Copy-Item $exePath $deploy
 
         $windeployqt = Join-Path $env:Qt6_DIR "bin\windeployqt.exe"
 
@@ -59,13 +58,11 @@ jobs:
 
         & "$windeployqt" "$deploy\TransferOne.exe" --release
 
-    # 6️⃣ Napravi ZIP sa exe + DLL-ovima
     - name: Package ZIP
       shell: pwsh
       run: |
         Compress-Archive -Path deploy\* -DestinationPath TransferOne_Full.zip
 
-    # 7️⃣ Uploaduj ZIP kao artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
